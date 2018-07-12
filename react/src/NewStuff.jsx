@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Container, Row, Col, Alert, Button, Form, FormGroup, Label, Input } from 'reactstrap';
 import Autocomplete from 'react-autocomplete'
+import QrReader from 'react-qr-reader'
 
 import moment from 'moment';
 import axios from 'axios';
@@ -13,17 +14,33 @@ class NewStuff extends Component {
       Barcode: "",
       Expires: moment().format("YYYY-MM-DD"),
       items: [],
+      delay: 2000,
+      result: 'No result',
       status: 0,
-      errMsg: ""
+      errMsg: "", 
+
     }
     this.save = this.save.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleScan = this.handleScan.bind(this)
+
   }
 
   handleChange(e) {
     let change = {}
     change[e.target.name] = e.target.value
     this.setState(change)
+  }
+
+   handleScan(data){
+    if(data){
+      this.setState({
+        result: data,
+      })
+    }
+  }
+  handleError(err){
+    console.error(err)
   }
 
 
@@ -94,7 +111,7 @@ class NewStuff extends Component {
                   getItemValue ={(item) => item.Name}
                   items={this.state.items}
                   renderItem={(item, isHighlighted) =>
-                    <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
+                    <div key={item.Name} style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
                       {item.Name}
                     </div>
                   }
@@ -105,15 +122,17 @@ class NewStuff extends Component {
 
                
                 </FormGroup>
-                <FormGroup>
+                <FormGroup hidden={true}>
                   <Label >Barcode</Label>
-                  <Input
-                  type="text"
-                  name="Barcode"
-                  id="barcode"
-                  value={this.state.Barcode}
-                  onChange={this.handleChange}
-                  placeholder="Barcode" />
+                  <div>
+                  <QrReader
+                    delay={this.state.delay}
+                    onError={this.handleError}
+                    onScan={this.handleScan}
+                    style={{ width: '100%' }}
+                    />
+                  <p>{this.state.result}</p>
+                </div>
                 </FormGroup>
                 <FormGroup>
                   <Label >Expires</Label>
