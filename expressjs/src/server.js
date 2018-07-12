@@ -13,6 +13,16 @@ const url = 'mongodb://192.168.1.1:27017';
 const dbName = 'TrackMyStuff';
 
 app.get('/_app/products', (req, res) => {
+  const data = req.body;
+  const productName = data.name.toLowerCase().trim();
+  const collection = db.collection('Product');
+  collection.find({CleanName: /^productName/}).toArray(function(err, docs) {
+    assert.equal(err, null);
+    res.send(docs);
+  })
+})
+
+app.get('/_app/stuff', (req, res) => {
   const collection = db.collection('Stuff');
   collection.find({}).toArray(function(err, docs) {
     assert.equal(err, null);
@@ -20,15 +30,25 @@ app.get('/_app/products', (req, res) => {
   })
 })
 
-app.post('/_app/product', (req, res) => {
-  const collection = db.collection('Stuff');
+app.post('/_app/stuff', (req, res) => {
   const data = req.body;
-
-  collection.insertOne(
-   {Name : data.name, Expires: data.expires}, function(err, result) {
-     assert.equal(null, err);
-     res.send({status: "OK"})
-   });
+  const productName = data.name;
+  const cleanProductName = data.name.toLowerCase().trim();
+  const productColl = db.collection('Product');
+  productColl.findOne({Name: productName, CleanName: cleanProductName}, (err, result) => {
+    assert.equal(err, null);
+    if (!result) {
+     productColl.insertOne({Name : productName, CleanName: cleanProductName}, function(err, result) { });
+    }
+    /* Insert stuff now */
+    const collection = db.collection('Stuff');
+    collection.insertOne({Name : data.name, Expires: data.expires}, function(err, result) {
+       assert.equal(null, err);
+       res.send({status: "OK"})
+     });
+  })
+  
+  
 })
 
 // Use connect method to connect to the server

@@ -16,7 +16,7 @@ class ListStuff extends Component {
 
   getProducts() {
     var context = this;
-    axios.get('/_app/products')
+    axios.get('/_app/stuff')
     .then(function (response) {
       response.data.forEach(e=> e.Expires = moment(e.Expires) )
       context.setState({products: response.data})

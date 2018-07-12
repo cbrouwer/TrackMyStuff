@@ -23,6 +23,8 @@ class NewStuff extends Component {
     this.setState(change)
   }
 
+  
+
   save() {
     if (!this.state.Name) {
       this.setState({status: -1, errMsg: 'Name is empty'});
@@ -35,7 +37,7 @@ class NewStuff extends Component {
     }
 
     const context = this;
-    axios.post('/_app/product', {
+    axios.post('/_app/stuff', {
         name: this.state.Name,
         expires: this.state.Expires,
       })
