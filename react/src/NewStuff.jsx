@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Container, Row, Col, Alert, Button, Form, FormGroup, Label, Input } from 'reactstrap';
+import Autocomplete from 'react-autocomplete'
 
 import moment from 'moment';
 import axios from 'axios';
@@ -9,7 +10,9 @@ class NewStuff extends Component {
     super(props);
     this.state = {
       Name: "",
+      Barcode: "",
       Expires: moment().format("YYYY-MM-DD"),
+      items: [],
       status: 0,
       errMsg: ""
     }
@@ -23,7 +26,7 @@ class NewStuff extends Component {
     this.setState(change)
   }
 
-  
+
 
   save() {
     if (!this.state.Name) {
@@ -40,6 +43,7 @@ class NewStuff extends Component {
     axios.post('/_app/stuff', {
         name: this.state.Name,
         expires: this.state.Expires,
+        barcode: this.state.Barcode,
       })
       .then(function (response) {
         context.setState({status: 1, Name: "", Expires: "", errMsg: ""})
@@ -49,6 +53,21 @@ class NewStuff extends Component {
       });
 
   }
+
+  getItems(text) {
+    const context = this;
+    this.setState({Name : text}); 
+    axios.post('/_app/products', {
+        name: text,
+      })
+      .then(function (response) {
+        context.setState({items: response.data});
+      })
+      .catch(function (error) {
+        context.setState({status: -1, errMsg: error})
+      });
+  }
+
   render() {
     var alert = <div/>;
     if (this.state.status === 1) {
@@ -68,15 +87,33 @@ class NewStuff extends Component {
           <Row>
              <Col sm={{ size: 6, offset: 1 }}>
                <Form>
+               <FormGroup>
+                <Label >Name </Label>
+
+                <Autocomplete
+                  getItemValue ={(item) => item.Name}
+                  items={this.state.items}
+                  renderItem={(item, isHighlighted) =>
+                    <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
+                      {item.Name}
+                    </div>
+                  }
+                  value={this.state.Name}
+                  onChange={(e) => this.getItems(e.target.value)}
+                  onSelect={(val) => this.setState({Name: val})}
+                />
+
+               
+                </FormGroup>
                 <FormGroup>
-                  <Label >Name</Label>
+                  <Label >Barcode</Label>
                   <Input
                   type="text"
-                  name="Name"
-                  id="name"
-                  value={this.state.Name}
+                  name="Barcode"
+                  id="barcode"
+                  value={this.state.Barcode}
                   onChange={this.handleChange}
-                  placeholder="Name" />
+                  placeholder="Barcode" />
                 </FormGroup>
                 <FormGroup>
                   <Label >Expires</Label>

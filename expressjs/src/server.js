@@ -12,11 +12,11 @@ var db;
 const url = 'mongodb://192.168.1.1:27017';
 const dbName = 'TrackMyStuff';
 
-app.get('/_app/products', (req, res) => {
+app.post('/_app/products', (req, res) => {
   const data = req.body;
   const productName = data.name.toLowerCase().trim();
   const collection = db.collection('Product');
-  collection.find({CleanName: /^productName/}).toArray(function(err, docs) {
+  collection.find({CleanName: {$regex: "^"+productName}}).toArray(function(err, docs) {
     assert.equal(err, null);
     res.send(docs);
   })
@@ -38,7 +38,7 @@ app.post('/_app/stuff', (req, res) => {
   productColl.findOne({Name: productName, CleanName: cleanProductName}, (err, result) => {
     assert.equal(err, null);
     if (!result) {
-     productColl.insertOne({Name : productName, CleanName: cleanProductName}, function(err, result) { });
+     productColl.insertOne({Name : productName, Barcode: data.barcode, CleanName: cleanProductName}, function(err, result) { });
     }
     /* Insert stuff now */
     const collection = db.collection('Stuff');
