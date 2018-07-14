@@ -122,7 +122,7 @@ class NewStuff extends Component {
 
                
                 </FormGroup>
-                <FormGroup hidden={true}>
+                <FormGroup hidden={false}>
                   <Label >Barcode</Label>
                   <div>
                   <QrReader
