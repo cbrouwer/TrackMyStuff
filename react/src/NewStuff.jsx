@@ -96,7 +96,6 @@ class NewStuff extends Component {
          returnAddr += window.location.pathname
     }
     returnAddr += "/{CODE}";
-    window.alert(returnAddr)
     window.open("http://zxing.appspot.com/scan?ret="+encodeURIComponent(returnAddr)+"&SCAN_FORMATS=EAN_13", "_blank");
     window.close();
   }
