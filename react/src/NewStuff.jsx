@@ -2,10 +2,6 @@ import React, { Component } from 'react';
 import { Container, Row, Col, Alert, Button, Form, FormGroup, Label, Input } from 'reactstrap';
 import Autocomplete from 'react-autocomplete'
 
-
-import Scanner from './Scanner';
-import Result from './Result';
-
 import moment from 'moment';
 import axios from 'axios';
 
@@ -14,20 +10,21 @@ class NewStuff extends Component {
     super(props);
     this.state = {
       Name: "",
-      Barcode: "",
+      Barcode: props.match.params.barcode,
       Expires: moment().format("YYYY-MM-DD"),
       items: [],
-      scanning: false,
       status: 0,
       errMsg: "", 
 
     }
     this.save = this.save.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this._onDetected = this._onDetected.bind(this);
-    this._scan = this._scan.bind(this);
-    this.getItem = this.getItem.bind(this);
+    this.scan = this.scan.bind(this);
+    if (props.match.params.barcode) {
+      this.getItem(props.match.params.barcode)
+    } 
   }
+
 
   handleChange(e) {
     let change = {}
@@ -66,7 +63,9 @@ class NewStuff extends Component {
         barcode: barcode,
       })
       .then(function (response) {
-        context.setState({items: response.data});
+        if (response.data && response.data[0]) {
+           context.setState({items: response.data, Name: response.data[0].Name});
+        }
       })
       .catch(function (error) {
         context.setState({status: -1, errMsg: error})
@@ -87,12 +86,19 @@ class NewStuff extends Component {
       });
   }
 
-  _scan() {
-    this.setState({scanning: !this.state.scanning});
-  }
-  _onDetected(result) {
-    this.setState({scanning: false, Barcode: result.codeResult.code});
-    this.getItem(result.codeResult.code)
+  scan() {
+    var returnAddr = window.location.protocol + "//" + window.location.hostname;
+    if (this.props.match.params.barcode) { 
+       var pathArr = window.location.pathname.split('/');
+       pathArr.pop()
+       returnAddr += pathArr.join('/')
+    } else {
+         returnAddr += window.location.pathname
+    }
+    returnAddr += "/{CODE}";
+    window.alert(returnAddr)
+    window.open("http://zxing.appspot.com/scan?ret="+encodeURIComponent(returnAddr)+"&SCAN_FORMATS=EAN_13", "_blank");
+    window.close();
   }
 
   render() {
@@ -135,15 +141,13 @@ class NewStuff extends Component {
                 <FormGroup hidden={false}>
                   <Label >Barcode</Label>
                   <div>
-	           <Button onClick={this._scan}>{this.state.scanning ? 'Close' : 'Scan'}</Button>
+	           <Button onClick={this.scan}> Scan</Button>
                     <Input
                       type="text"
                       name="Barcode"
                       id="barcode"
                       value={this.state.Barcode}
                       onChange={this.handleChange} />
-
-	           {this.state.scanning ? <Scanner onDetected={this._onDetected}/> : null}
                    </div>
                 </FormGroup>
                 <FormGroup>

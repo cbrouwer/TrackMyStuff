@@ -16,7 +16,8 @@ class AppRouter extends Component {
           <Switch>
             <Route exact path="/" component={Home} />
             <Route path="/stuff/list" component={ListStuff} />
-            <Route path="/stuff/new" component={NewStuff} />
+            <Route path="/stuff/new/:barcode?" component={NewStuff} />
+
           </Switch>
         </div>
       </Router>
