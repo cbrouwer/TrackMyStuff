@@ -15,9 +15,15 @@ const dbName = 'TrackMyStuff';
 
 app.post('/_app/products', (req, res) => {
   const data = req.body;
-  const productName = data.name.toLowerCase().trim();
+  var query = {}
+  if (data.name) {
+    const productName = data.name.toLowerCase().trim();
+    query = {CleanName: {$regex: "^"+productName}};
+  } else {
+    query = {Barcode: data.barcode};
+  }
   const collection = db.collection('Product');
-  collection.find({CleanName: {$regex: "^"+productName}}).toArray(function(err, docs) {
+  collection.find(query).toArray(function(err, docs) {
     assert.equal(err, null);
     res.send(docs);
   })

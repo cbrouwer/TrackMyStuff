@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import { Container, Row, Col, Alert, Button, Form, FormGroup, Label, Input } from 'reactstrap';
 import Autocomplete from 'react-autocomplete'
-import QrReader from 'react-qr-reader'
+
+
+import Scanner from './Scanner';
+import Result from './Result';
 
 import moment from 'moment';
 import axios from 'axios';
@@ -14,16 +17,16 @@ class NewStuff extends Component {
       Barcode: "",
       Expires: moment().format("YYYY-MM-DD"),
       items: [],
-      delay: 2000,
-      result: 'No result',
+      scanning: false,
       status: 0,
       errMsg: "", 
 
     }
     this.save = this.save.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.handleScan = this.handleScan.bind(this)
-
+    this._onDetected = this._onDetected.bind(this);
+    this._scan = this._scan.bind(this);
+    this.getItem = this.getItem.bind(this);
   }
 
   handleChange(e) {
@@ -31,19 +34,6 @@ class NewStuff extends Component {
     change[e.target.name] = e.target.value
     this.setState(change)
   }
-
-   handleScan(data){
-    if(data){
-      this.setState({
-        result: data,
-      })
-    }
-  }
-  handleError(err){
-    console.error(err)
-  }
-
-
 
   save() {
     if (!this.state.Name) {
@@ -70,7 +60,19 @@ class NewStuff extends Component {
       });
 
   }
+  getItem(barcode) {
+    const context = this;
+    axios.post('/_app/products', {
+        barcode: barcode,
+      })
+      .then(function (response) {
+        context.setState({items: response.data});
+      })
+      .catch(function (error) {
+        context.setState({status: -1, errMsg: error})
+      });
 
+  }
   getItems(text) {
     const context = this;
     this.setState({Name : text}); 
@@ -83,6 +85,14 @@ class NewStuff extends Component {
       .catch(function (error) {
         context.setState({status: -1, errMsg: error})
       });
+  }
+
+  _scan() {
+    this.setState({scanning: !this.state.scanning});
+  }
+  _onDetected(result) {
+    this.setState({scanning: false, Barcode: result.codeResult.code});
+    this.getItem(result.codeResult.code)
   }
 
   render() {
@@ -125,14 +135,16 @@ class NewStuff extends Component {
                 <FormGroup hidden={false}>
                   <Label >Barcode</Label>
                   <div>
-                  <QrReader
-                    delay={this.state.delay}
-                    onError={this.handleError}
-                    onScan={this.handleScan}
-                    style={{ width: '100%' }}
-                    />
-                  <p>{this.state.result}</p>
-                </div>
+	           <Button onClick={this._scan}>{this.state.scanning ? 'Close' : 'Scan'}</Button>
+                    <Input
+                      type="text"
+                      name="Barcode"
+                      id="barcode"
+                      value={this.state.Barcode}
+                      onChange={this.handleChange} />
+
+	           {this.state.scanning ? <Scanner onDetected={this._onDetected}/> : null}
+                   </div>
                 </FormGroup>
                 <FormGroup>
                   <Label >Expires</Label>
