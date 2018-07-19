@@ -12,7 +12,9 @@ class NewStuff extends Component {
       Name: "",
       Barcode: props.match.params.barcode,
       Expires: moment().format("YYYY-MM-DD"),
-      items: [],
+      Location: "",
+      names: [],
+      locations: [],        
       status: 0,
       errMsg: "", 
 
@@ -20,6 +22,7 @@ class NewStuff extends Component {
     this.save = this.save.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.scan = this.scan.bind(this);
+    this.getLocations();
     if (props.match.params.barcode) {
       this.getItem(props.match.params.barcode)
     } 
@@ -46,11 +49,12 @@ class NewStuff extends Component {
     const context = this;
     axios.post('/_app/stuff', {
         name: this.state.Name,
+        location: this.state.Location,
         expires: this.state.Expires,
         barcode: this.state.Barcode,
       })
       .then(function (response) {
-        context.setState({status: 1, Name: "", Expires: "", errMsg: ""})
+        context.setState({status: 1, Name: "", Expires: "", errMsg: "", Barcode: ""})
       })
       .catch(function (error) {
         context.setState({status: -1, errMsg: error})
@@ -64,7 +68,7 @@ class NewStuff extends Component {
       })
       .then(function (response) {
         if (response.data && response.data[0]) {
-           context.setState({items: response.data, Name: response.data[0].Name});
+           context.setState({names: response.data, Name: response.data[0].Name});
         }
       })
       .catch(function (error) {
@@ -72,17 +76,27 @@ class NewStuff extends Component {
       });
 
   }
-  getItems(text) {
+  getNames(text) {
     const context = this;
     this.setState({Name : text}); 
     axios.post('/_app/products', {
         name: text,
       })
       .then(function (response) {
-        context.setState({items: response.data});
+        context.setState({names: response.data});
       })
       .catch(function (error) {
         context.setState({status: -1, errMsg: error})
+      });
+  }
+  getLocations() {
+    const context = this;
+    axios.get('/_app/locations')
+      .then(function (response) {
+        context.setState({locations: response.data});
+      })
+      .catch(function (error) {
+        context.setState({status: -1})
       });
   }
 
@@ -111,6 +125,8 @@ class NewStuff extends Component {
         Error adding stuff: {this.state.errMsg}
       </Alert>);
     }
+    var matchedLocations = this.state.locations;
+    if (this.state.Location) matchedLocations = this.state.locations.filter( (l) => l.Name.toLowerCase().startsWith(this.state.Location.toLowerCase()));
     return (
       <div>
         <h2> New stuff </h2>
@@ -124,18 +140,34 @@ class NewStuff extends Component {
 
                 <Autocomplete
                   getItemValue ={(item) => item.Name}
-                  items={this.state.items}
+                  items={this.state.names}
                   renderItem={(item, isHighlighted) =>
                     <div key={item.Name} style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
                       {item.Name}
                     </div>
                   }
                   value={this.state.Name}
-                  onChange={(e) => this.getItems(e.target.value)}
+                  onChange={(e) => this.getNames(e.target.value)}
                   onSelect={(val) => this.setState({Name: val})}
                 />
+                </FormGroup>
+               <FormGroup>
+                <Label >Location </Label>
 
-               
+                <Autocomplete
+                  getItemValue ={(item) => item.Name}
+                  items={matchedLocations}
+                  renderItem={(item, isHighlighted) =>
+                    <div key={item.Name} style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
+                      {item.Name}
+                    </div>
+                  }
+                  value={this.state.Location}
+                  onChange={(e) => this.setState({Location: e.target.value})}
+                  onSelect={(val) => this.setState({Location: val})}
+                />
+
+
                 </FormGroup>
                 <FormGroup hidden={false}>
                   <Label >Barcode</Label>
